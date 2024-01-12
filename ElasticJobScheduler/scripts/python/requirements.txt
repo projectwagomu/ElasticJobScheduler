@@ -1,0 +1,5 @@
+numpy~=1.24.3
+plotly~=5.14.1
+matplotlib~=3.7.1
+pandas~=2.0.2
+kaleido~=0.2.1
