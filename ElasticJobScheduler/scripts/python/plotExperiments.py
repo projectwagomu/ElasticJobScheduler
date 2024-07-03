@@ -33,7 +33,8 @@ ANALYSES_PATH = ""
 INPUT_PATH = ""
 GLOBAL_MAP = {}
 ARRAY_MALLEABLE_TO_RIGID = []
-MALLEABLE_STRATEGIES = ["MalleableStrategy"]
+MALLEABLE_STRATEGIES = ["EvolvingEasyBackfilling"]
+#MALLEABLE_STRATEGIES = ["MalleableStrategy"]
 GENERATE_CSV_PER_EXP = True
 GENERATE_IMAGE_PER_EXP = True
 DRAW_WEB = False
@@ -47,12 +48,13 @@ ENABLE_ORDERING = True
 color_mapping = {
     'Backfilling': '#636EFA',
     'EasyBackfilling': '#EF553B',
-    'MalleableStrategy': '#00CC96',
+    'EvolvingEasyBackfilling': '#00CC96',
+    'MalleableStrategy': '#9600cc',
     'FCFS': '#AB63FA',
     'Shrink Events': '#FFA15A',
     'Grow Events': '#19D3F3',
-    'inside_color_a': '#d6d6d6',
-    'inside_color_b': '#8c8c8c',
+    'inside_color_a' : '#d6d6d6',
+    'inside_color_b' : '#8c8c8c',
     'preShrinkTimeGLB': '#FF6692',
     'growTimeAPGASClean': '#B6E880',
     'postGrowTimeGLB': '#FF97FF',
@@ -64,7 +66,6 @@ color_mapping = {
 scheduler_algo = ['']
 # List of expected configuration variables
 config_variables = ['scheduler_algo']
-
 scheduler_algo_reverse = ['']
 
 DRAW_RANGE = 0
@@ -73,7 +74,6 @@ folder_map = {}
 np.random.seed(42 + 1)
 color_map = {key: (np.random.random(), np.random.random(), np.random.random()) for key in range(1, 100 + 2)}
 MALLEABLE_TO_RIGID_RATE = set()
-
 
 def main():
     if not os.path.exists(ANALYSES_PATH):
@@ -102,9 +102,11 @@ def main():
 
     average_job_turnaround_time()
 
-    average_job_computation_time()
+    computation_time = average_job_computation_time()
 
-    average_job_waiting_time()
+    waiting_time = average_job_waiting_time()
+
+    average_job_turnaround_time_stacked(computation_time, waiting_time)
 
     answer_time = apgas_answer_time()
 
@@ -112,6 +114,11 @@ def main():
 
     shrink_grow_time(answer_time, start_time)
 
+
+# https://plotly.com/python/bar-charts/
+def average_job_turnaround_time_stacked(computation_time, waiting_time):
+    draw_stacked_graph_with_range(waiting_time, computation_time, 0, '', 'Time in Seconds',
+                                  "AverageJobTurnaroundTimeStacked")
 
 def apgas_start_time():
     startup_times = []
@@ -123,8 +130,7 @@ def apgas_start_time():
     for root, dirs, files in os.walk(INPUT_PATH):
         for file in files:
             file_path = os.path.join(root, file)
-            with open(file_path, 'r', encoding="utf-8",
-                      errors="ignore") as f:  # Added errors="ignore" in case of encoding issues
+            with open(file_path, 'r', encoding="utf-8", errors="ignore") as f:  # Added errors="ignore" in case of encoding issues
                 content = f.read()
 
                 startup_matches = re.findall(startup_pattern, content)
@@ -132,6 +138,7 @@ def apgas_start_time():
 
                 init_matches = re.findall(init_pattern, content)
                 init_times.extend([float(match) for match in init_matches])
+
 
     average_startup_time = sum(startup_times) / len(startup_times)
     print(f"Found {len(startup_times)} startup times.")
@@ -178,7 +185,7 @@ def shrink_grow_time(answer_time, start_time):
             print(f'Average Time per Place in Seconds: {timePlaceAvg}', file=file)
             print('-' * 20, file=file)
 
-    # figure
+    #figure
     preShrinkTimeGLB = float(averages_dict['preShrinkTimeGLB']['time_average'] / Decimal(nano))
     postShrinkTimeGLB = float(averages_dict['postShrinkTimeGLB']['time_average'] / Decimal(nano))
     shrinkTimeAPGAS = float(averages_dict['shrinkTimeAPGAS']['time_average'] / Decimal(nano))
@@ -188,19 +195,15 @@ def shrink_grow_time(answer_time, start_time):
     shrinkTimeAPGASClean = shrinkTimeAPGAS - preShrinkTimeGLB - postShrinkTimeGLB
     growTimeAPGASClean = growTimeAPGAS - preGrowTimeGLB - postGrowTimeGLB
 
+
     fig = go.Figure(data=[
-        go.Bar(name='preShrink() of GLB', x=['Shrinking'], y=[preShrinkTimeGLB],
-               marker=dict(color=color_mapping["preShrinkTimeGLB"])),
+        go.Bar(name='preShrink() of GLB', x=['Shrinking'], y=[preShrinkTimeGLB], marker=dict(color=color_mapping["preShrinkTimeGLB"])),
         go.Bar(name='postShrink() of GLB', x=['Shrinking'], y=[postShrinkTimeGLB]),
-        go.Bar(name='shrinking of APGAS', x=['Shrinking'], y=[growTimeAPGASClean],
-               marker=dict(color=color_mapping["growTimeAPGASClean"])),
+        go.Bar(name='shrinking of APGAS', x=['Shrinking'], y=[growTimeAPGASClean], marker=dict(color=color_mapping["growTimeAPGASClean"])),
         go.Bar(name='preGrow() of GLB', x=['Growing'], y=[preGrowTimeGLB]),
-        go.Bar(name='postGrow() of GLB', x=['Growing'], y=[postGrowTimeGLB],
-               marker=dict(color=color_mapping["postGrowTimeGLB"])),
-        go.Bar(name='growing of APGAS', x=['Growing'], y=[shrinkTimeAPGASClean],
-               marker=dict(color=color_mapping["shrinkTimeAPGASClean"])),
-        go.Bar(name='APGAS to be malleable', x=['APGAS to be malleable'], y=[answer_time],
-               marker=dict(color=color_mapping["answer_time"])),
+        go.Bar(name='postGrow() of GLB', x=['Growing'], y=[postGrowTimeGLB], marker=dict(color=color_mapping["postGrowTimeGLB"])),
+        go.Bar(name='growing of APGAS', x=['Growing'], y=[shrinkTimeAPGASClean], marker=dict(color=color_mapping["shrinkTimeAPGASClean"])),
+        go.Bar(name='APGAS to be malleable', x=['APGAS to be malleable'], y=[answer_time], marker=dict(color=color_mapping["answer_time"])),
     ])
 
     standoff = 10
@@ -231,10 +234,10 @@ def shrink_grow_time(answer_time, start_time):
     output = f"{ANALYSES_PATH}ShrinkGrowTimes.{FORMAT}"
     fig.write_image(output, format=OUTPUT_FILE_TYPE, engine="kaleido")
 
-    # writing csv/dat
+    #writing new csv/dat file for gnuplot
     output = f"{ANALYSES_PATH}ShrinkGrowTimes.dat"
     startup_apgas = start_time
-    startup_glb = answer_time - start_time
+    startup_glb = answer_time-start_time
     grow_apgas = growTimeAPGASClean
     grow_glb = preGrowTimeGLB + postGrowTimeGLB
     shrink_apgas = shrinkTimeAPGASClean
@@ -254,6 +257,9 @@ def apgas_answer_time():
     for item in GLOBAL_MAP:
         for job_id in GLOBAL_MAP[item]["jobs"]:
             job = GLOBAL_MAP[item]["jobs"][job_id]
+            if job["JOB_CLASS"] == "evolving" and job["answer"] != 0:
+                answer_time_sum += (job["answer"] - job["start"]) / 1000
+                count += 1
             if job["JOB_CLASS"] == "malleable" and job["answer"] != 0:
                 answer_time_sum += (job["answer"] - job["start"]) / 1000
                 count += 1
@@ -448,7 +454,14 @@ def node_utilization():
         malleable = GLOBAL_MAP[item]["malleable_count"]
         duration = GLOBAL_MAP[item]["duration"]
         workload = GLOBAL_MAP[item]["workload"]
+        print(f"strategy: {strategy}")
+        print(f"malleable: {malleable}")
+        print(f"duration: {duration}")
+        print(f"workload: {workload}")
+
         res = workload / duration
+        print(f"res: {res}")
+        print("##########")
 
         if strategy not in dic:
             dic[strategy] = {}
@@ -490,6 +503,9 @@ def total_running_time():
 
         arr.append(duration)
 
+    print(f"ARRAY_MALLEABLE_TO_RIGID: {ARRAY_MALLEABLE_TO_RIGID}")
+    print(f"data: {data}")
+
     res = {}
     for strategy in data:
         new_res = []
@@ -506,6 +522,148 @@ def total_running_time():
     else:
         draw_graph_with_range(res, DRAW_RANGE, '', 'Zeit (s)', "Gesamtlaufzeit")
 
+    for strategy in res:
+        tmp_res = []
+        start = res[strategy][0]
+        for i in res[strategy]:
+            tmp_res.append(((start - i) / start) * 100)
+        res[strategy] = tmp_res[1:]
+
+    percentage_array = [(value / ARRAY_MALLEABLE_TO_RIGID[1:][-1]) * 100 for value in ARRAY_MALLEABLE_TO_RIGID[1:]]
+
+    if ENABLE_ENGLISH_OUTPUT:
+        draw_graph_with_range(res, 0, '', 'Speedup Overall Completion Time in Percent', "SpeedupOverallCompletionTime",
+                              percentage_array)
+    else:
+        draw_graph_with_range(res, 0, '', 'Speedup Gesamtlaufzeit (%)', "SpeedupGesamtlaufzeit", percentage_array)
+
+
+def draw_stacked_graph_with_range(data_a, data_b, base_data, header_title, y_title, save_title, x_data=None):
+    if x_data is None:
+        percentage_array = [(value / ARRAY_MALLEABLE_TO_RIGID[-1]) * 100 for value in ARRAY_MALLEABLE_TO_RIGID]
+        x_data = percentage_array
+
+    mytitle = 'Malleable/Moldable-Job Anteil (%)'
+    if ENABLE_ENGLISH_OUTPUT:
+        mytitle = 'Percentage of Moldable/Evolving Jobs'
+
+    fig = go.Figure()
+
+    x_axis_labels = ["0", "20", "40", "60", "80", "100"]
+
+    strategies = list(data_a.keys())
+
+    if ENABLE_ORDERING:
+        strategies = scheduler_algo
+        data_a = {key: data_a[key] for key in scheduler_algo}
+        data_b = {key: data_b[key] for key in scheduler_algo}
+
+    total_strategies = len(strategies)
+    bar_width = 0.15
+    positions = [-(total_strategies / 2) * bar_width + i * (bar_width + 0.04) for i in range(total_strategies)]
+
+    for i, key in enumerate(strategies):
+        x_position = [int(x_axis) + positions[i] for x_axis in range(len(x_axis_labels))]
+
+        fig.add_trace(go.Bar(
+            x=x_position,
+            y=data_a[key],
+            marker=dict(color=color_mapping["inside_color_a"], line=dict(color=color_mapping[key], width=4)),
+            width=bar_width,
+            showlegend=False
+        ))
+        fig.add_trace(go.Bar(
+            x=x_position,
+            y=data_b[key],
+            marker=dict(color=color_mapping["inside_color_b"], line=dict(color=color_mapping[key], width=4)),
+            width=bar_width,
+            showlegend=False
+        ))
+
+    fig.add_trace(go.Bar(
+        x=[None],
+        y=[None],
+        marker=dict(color=color_mapping["inside_color_a"]),
+        name="Waiting Time"
+    ))
+
+    fig.add_trace(go.Bar(
+        x=[None],
+        y=[None],
+        marker=dict(color=color_mapping["inside_color_b"]),
+        name="Computation Time"
+    ))
+
+    for key in scheduler_algo_reverse:
+        fig.add_trace(go.Bar(
+            x=[None],
+            y=[None],
+            name=key,
+            marker=dict(color=color_mapping[key]),
+        ))
+
+    fig.update_layout(
+        barmode='stack',
+        bargap=0.15,
+        bargroupgap=0.2,
+        title=header_title,
+        yaxis=dict(
+            title=y_title,
+            titlefont_size=FONTSIZE,
+            tickfont_size=FONTSIZE,
+        ),
+        xaxis=dict(
+            tickvals=list(range(len(x_axis_labels))),
+            ticktext=x_axis_labels,
+            title=mytitle,
+            titlefont_size=FONTSIZE,
+            tickfont_size=FONTSIZE,
+            range=[-0.5, 5.5],
+        ),
+
+        width=WIDTH_PIXEL,
+        height=HEIGHT_PIXEL,
+        margin=dict(l=10, r=10, t=10, b=100),
+        legend=dict(
+            font=dict(size=FONTSIZE),
+            traceorder="reversed",
+        ),
+    )
+
+    if DRAW_WEB:
+        fig.show()
+
+    output = f"{ANALYSES_PATH}{save_title}.{FORMAT}"
+    fig.write_image(output, format=OUTPUT_FILE_TYPE, engine="kaleido")
+
+    #Write ONE csv/dat for gnuplot
+    output = f"{ANALYSES_PATH}{save_title}All.dat"
+    headers_waiting = ["Percentage"] + ["{}-Waiting".format(key) for key in data_a.keys()]
+    headers_computation = ["{}-Computation".format(key) for key in data_b.keys()]
+    headers = headers_waiting + headers_computation
+    data_to_write = []
+    data_to_write.append(", ".join(headers))
+    for i, label in enumerate(x_axis_labels):
+        row = [label]
+        for dataset in [data_a, data_b]:
+            for key in dataset:
+                row.append(str(dataset[key][i]))
+        data_to_write.append(", ".join(row))
+
+    with open(output, 'w') as file:
+        for line in data_to_write:
+            file.write(line + "\n")
+
+    #Write MULTIPLE csv for gnuplot
+    data_points = ["1", "2", "3", "4", "5", "6"]
+    for strategy in data_a.keys():
+        output = f"{ANALYSES_PATH}{save_title}{strategy}.csv"
+        with open(output, 'w') as file:
+            file.write("Datapoint,{}-Waiting,{}-Computation\n".format(strategy, strategy))
+            for i, label in enumerate(data_points):
+                file.write("{},{},{}\n".format(label, data_a[strategy][i], data_b[strategy][i]))
+
+
 
 def draw_graph_with_range(data, base_data, header_title, y_title, save_title, x_data=None):
     if x_data is None:
@@ -514,7 +672,7 @@ def draw_graph_with_range(data, base_data, header_title, y_title, save_title, x_
 
     mytitle = 'Malleable/Moldable-Job Anteil (%)'
     if ENABLE_ENGLISH_OUTPUT:
-        mytitle = 'Percentage of Malleable/Moldable Jobs'
+        mytitle = 'Percentage of Moldable/Evolving Jobs'
 
     fig = go.Figure()
 
@@ -634,7 +792,7 @@ def generate_csv(data, csv_path, slurmjobid):
 
             str_tmp += str(job["kill"]) + ","
             str_tmp += str(job["errorElastic"]) + ","
-            if job["errorElastic"]:
+            if job["errorElastic"] == True:
                 print(str(slurmjobid) + " errorElastic==true for job " + str(key))
 
             if job["answer"] == 0:
@@ -666,8 +824,8 @@ def draw_graph(data, image_path):
     jobs = data["jobs"]
     start_graph_x = -1
 
-    print(data["id"], "Graph", data["strategy"], "Malleable:" + str(data["malleable_count"]),
-          "Rigid:" + str(data["rigid_count"]))
+    #print(data["id"], "Graph", data["strategy"], "Malleable:" + str(data["malleable_count"]),
+    #     "Rigid:" + str(data["rigid_count"]))
 
     for key in data["order"]:
         job = jobs[key]
@@ -784,6 +942,25 @@ def read_file(path, unique_id):
             time = timestamp - node_start_time[node]
             node_workload[node] = node_workload[node] + time
             node_start_time[node] = 0
+        # Evolving!
+        elif " :: free Node caused by Release:" in command:
+            node = command.split(":")[5]
+            # print(f"free Node caused by Release, node: {node}")
+            time = timestamp - node_start_time[node]
+            node_workload[node] = node_workload[node] + time
+            node_start_time[node] = 0
+            # for malleable this is done below in "elif ":: free Node:""
+            # but this does not work for evolving
+            job_id = get_job_id(command)
+            job = jobs[job_id]
+            tmp = command.split("::")
+            tmp = tmp[1].split(":")[1].replace(" ", "")
+            if timestamp not in job["tracking"]:
+                job["tracking"][timestamp] = {
+                    "type": "shrink",
+                    "nodes": []
+                }
+            job["tracking"][timestamp]["nodes"].append(tmp)
         elif " :: is now Reachable >> Job is now Malleable" in command:
             job_id = get_job_id(command)
             job = jobs[job_id]
@@ -910,6 +1087,8 @@ def read_file(path, unique_id):
 
     count = 0
     workload = 0
+    #print(f"node_workload: {node_workload}")
+
     for i in node_workload:
         workload = workload + node_workload[i]
         count += 1

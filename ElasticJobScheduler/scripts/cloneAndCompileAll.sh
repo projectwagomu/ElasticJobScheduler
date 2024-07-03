@@ -14,13 +14,15 @@ CWD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd $CWD/../..
 git clone https://github.com/projectwagomu/apgas.git apgas
 cd apgas
-git checkout v0.0.2
+rm -rf target
+git checkout v0.0.4
 mvn install -DskipTests
 
 cd $CWD/../..
 git clone https://github.com/projectwagomu/lifelineglb.git lifelineglb
 cd lifelineglb
-git checkout v0.0.2
+rm -rf target
+git checkout v0.0.4
 mvn package
 
 cd $CWD/..

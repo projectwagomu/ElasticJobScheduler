@@ -1,6 +1,6 @@
 # Elastic Job Scheduler
 
-This project introduces an **Elastic Job Scheduler** that focuse s on scheduling HPC jobs in an elastic way. This scheduler is expertly designed to dynamically adjust the size of running jobs, allowing them to expand or contract in terms of the number of nodes used. Currently, only APGAS jobs are supported, but the architecture is versatile allowing for the seamless integration of other job types. In addition, four job scheduling algorithms are provided, but the design allows for the easy addition of new algorithms.
+This project introduces an **Elastic Job Scheduler** that focuses on scheduling HPC jobs in an elastic way. This scheduler is expertly designed to dynamically adjust the size of running jobs, allowing them to expand or contract in terms of the number of nodes used. Currently, only APGAS jobs are supported, but the architecture is versatile allowing for the seamless integration of other job types. In addition, four job scheduling algorithms are provided, but the design allows for the easy addition of new algorithms.
 
 This scheduler is an advanced iteration of the *FIFO Malleable Job Scheduler*: https://github.com/projectwagomu/FIFO-Malleable-Job-Scheduler
 
@@ -35,7 +35,7 @@ The following four scripts are used to interact with the job scheduler.
 ./ElasticJobScheduler/scripts/stopScheduler.sh
 ```
 
-`startScheduler.sh` should be launched in the background on the host in charge of running the scheduler. After launching this processin the brackground, the hosts on which computation can be performed should be added using the `addNode.sh` script.
+`startScheduler.sh` should be launched in the background on the host in charge of running the scheduler. After launching this process in the background, the hosts on which computation can be performed should be added using the `addNode.sh` script.
 
 To submit a job, script `submitJob.sh` should be used with the path to the job script given as argument.
 
@@ -59,7 +59,7 @@ cores_per_node = 48
 timelimit = 60
 submitrange = 3
 jobs_without_delay = 5
-partition = "public2023"
+partition = "pub23"
 ex_name = "experiments"
 seeds = [42]
 ```
@@ -113,7 +113,8 @@ This software is released under the terms of the [Eclipse Public License v2.0](L
 
 ## Publications
 
-- _On the Performance of Malleable APGAS Programs and Batch Job Schedulers_ (to appear)
+- The Impact of Evolving APGAS Programs on HPC Clusters (to appear)
+- On the Performance of Malleable APGAS Programs and Batch Job Schedulers (https://doi.org/10.1007/s42979-024-02641-7)
   - Artefact: https://github.com/ProjectWagomu/ArtefactSNCS24
 
 ## Contributors

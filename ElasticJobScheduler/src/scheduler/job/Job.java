@@ -85,6 +85,9 @@ public abstract class Job {
   /** Return: if a job is malleable */
   public abstract boolean isMalleable();
 
+  /** Return: if a job is evolving */
+  public abstract boolean isEvolving();
+
   public String getJobName() {
     return this.jobName;
   }

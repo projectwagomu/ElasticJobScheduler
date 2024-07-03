@@ -24,6 +24,7 @@ public class Constants {
   public static final String JOB_CLASS = "JOB_CLASS";
   public static final String JOB_CLASS_RIGID = "rigid";
   public static final String JOB_CLASS_MALLEABLE = "malleable";
+  public static final String JOB_CLASS_EVOLVING = "evolving";
   public static final String MIN_NODES = "MIN_NODES";
   public static final String MAX_NODES = "MAX_NODES";
   public static final String JOB_NAME = "JOB_NAME";

@@ -25,6 +25,8 @@ public class Resources {
 
   public static final LinkedBlockingQueue<Job> openNewJobs = new LinkedBlockingQueue<>();
   public static final LinkedBlockingQueue<Job> runningJobs = new LinkedBlockingQueue<>();
+  // Currently, a maximum of one node can be requested for each running job.
+  public static final LinkedBlockingQueue<Job> evolvingGrowRequests = new LinkedBlockingQueue<>();
 
   /** Nodes */
   public static final List<Node> allNodes = new ArrayList<>();

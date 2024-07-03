@@ -12,11 +12,14 @@ package scheduler.receiver;
 
 import java.io.PrintWriter;
 import java.nio.file.Path;
+import java.util.*;
 import java.util.regex.Pattern;
 import scheduler.Configuration;
 import scheduler.Constants;
 import scheduler.Resources;
+import scheduler.job.Job;
 import scheduler.job.JobSh;
+import scheduler.job.jobType.APGASController;
 import scheduler.worker.cluster.Node;
 
 /** Manages all incoming messages from the receiver */
@@ -54,7 +57,8 @@ public class ParseCommand {
        * - shrinkTimeAPGAS
        * - postGrowTimeGLB
        * - postShrinkTimeGLB
-       * - preGrowTimeGLB - preShrinkTimeGLB
+       * - preGrowTimeGLB
+       * - preShrinkTimeGLB
        */
       String message = command.split(":")[0];
       String ip = command.split(":")[1];
@@ -79,12 +83,70 @@ public class ParseCommand {
               + " : "
               + (Long.parseLong(shrinkTime) / 1e9)
               + " sec");
+    } else if (command.contains("Evolving")) {
+      /*
+       * possible values:
+       * - Request
+       * - Release
+       * Always one node is requested/released
+       */
+
+      // We start with only released, i.e., requested is always rejected
+      // Evolving;Release;node
+
+      String message = command.split(":")[0];
+      String ip = command.split(":")[1];
+      Job job = Resources.nodeByIP.get(ip).getJob();
+      String type = message.split(";")[1];
+      String nodeString = message.split(";")[2];
+
+      Configuration.logger.log(
+          "JobID:"
+              + job.getId()
+              + " "
+              + job.getJobName()
+              + " :: "
+              + "Evolving"
+              + " : "
+              + type
+              + " : "
+              + nodeString);
+
+      if ("Release".equals(type)) {
+        Resources.evolvingGrowRequests.remove(job);
+        Node node = Resources.nodeById.get(nodeString);
+        job.activeNodes.remove(node);
+        job.setGrowShrink();
+        node.setJob(null);
+        // We assume only having APGAS jobs here
+        Resources.workingNodes.remove(node);
+        ArrayList<Node> nodeArrayList = new ArrayList<>();
+        nodeArrayList.add(node);
+        APGASController.kill(nodeArrayList, job, false);
+        Configuration.logger.log(
+            "JobID:" + job.getId() + " :: free Node caused by Release:" + node.getId());
+        try {
+          Resources.openNodes.put(node);
+        } catch (InterruptedException e) {
+          throw new RuntimeException(e);
+        }
+
+      } else if ("Request".equals(type)) {
+        Configuration.logger.log("Received a Grow Request from JobID:" + job.getId());
+        if (!Resources.evolvingGrowRequests.contains(job)) {
+          Resources.evolvingGrowRequests.add(job);
+          Configuration.logger.log("Added a Grow Request from JobID:" + job.getId());
+        }
+
+      } else {
+        response.println("Undefined Evolving Message");
+      }
+
+      Configuration.worker.wakeUpThread();
+      // END Evolving
     } else {
       response.println("undefined Message");
     }
-
-    // FUTURE WORK FOR ENABLING EVOLVING PROGRAMS:
-    // -> here the growth requests coming from the APGAS jobs can be processed
 
     return true;
   }

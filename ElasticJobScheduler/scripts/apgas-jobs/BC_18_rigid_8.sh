@@ -7,6 +7,5 @@
 
 common_dir="${SCRIPT_DIR}/"
 
-malleable=false
 GLBN=31
 source ${common_dir}/common.sh "handist.glb.examples.bc.StartBC -n 18"

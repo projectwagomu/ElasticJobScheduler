@@ -12,9 +12,18 @@ echo Launcher=$LAUNCHER
 echo Workers=$WORKERS
 THREADS=$((WORKERS * 2))
 echo Threads=$THREADS
-echo Malleable=$malleable
+echo Elastic=$ELASTIC
 echo SPECIFIC_COMMAND=$SPECIFIC_COMMAND
 echo GLBN=$GLBN
+echo JobName=$JOBNAME
+echo Port=$PORT
+
+export LOWLOAD=10
+export HIGHLOAD=90
+export SYNTH=evotree
+export BRANCH=5000
+export MODE=task
+
 
 target="${SCRIPT_DIR}/../../../lifelineglb/target"
 
@@ -31,14 +40,21 @@ java -cp "${target}/*" \
   -Dapgas.places=$NODES \
   -Dapgas.threads=$THREADS \
   -Dapgas.immediate.threads=$THREADS \
-  -Dapgas.elastic=$malleable \
+  -Dapgas.elastic=$ELASTIC \
   -Dapgas.elastic.allatonce=false \
+  -Dapgas.lowload=$LOWLOAD \
+  -Dapgas.highload=$HIGHLOAD \
+  -Dapgas.evolving.mode=$MODE \
+  -Dglb.synth=$SYNTH \
+  -Dglb.synth.branch=$BRANCH \
   -Dapgas.resilient=true \
   -Dapgas.backupcount=6 \
   -Dapgas.hostfile=$NODE_FILE \
   -Dapgas.consoleprinter=false \
   -Dglb.multiworker.workerperplace=$WORKERS \
   -Dglb.multiworker.n=$GLBN \
-  -Dmalleable_scheduler_ip=$SCHEDULER_IP \
-  -Dmalleable_scheduler_port=$SCHEDULER_PORT \
+  -Delastic_scheduler_ip=$SCHEDULER_IP \
+  -Delastic_scheduler_port=$SCHEDULER_PORT \
+  -Dhazelcast.name=$JOBNAME \
+  -Dapgas.port=$PORT \
   $SPECIFIC_COMMAND

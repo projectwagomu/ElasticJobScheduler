@@ -7,6 +7,5 @@
 
 common_dir="${SCRIPT_DIR}/"
 
-malleable=false
 GLBN=511
 source ${common_dir}/common.sh "handist.glb.examples.uts.StartMultiworkerUTS -d 18"

@@ -81,7 +81,7 @@ public class JobSh extends Job {
   public int possibleExpand() {
     if (this.activeNodes == null) return 0;
     if (!this.isActive()) return 0;
-    if (!this.isMalleable()) return 0;
+    if (!this.isMalleable() && !this.isEvolving()) return 0;
     return this.maxNodes - this.activeNodes();
   }
 
@@ -236,6 +236,14 @@ public class JobSh extends Job {
     if ((System.currentTimeMillis() - (this.cdGrowShrink + Constants.CD_GROW_SHRINK)) <= 0)
       return false;
     return Constants.JOB_CLASS_MALLEABLE.equals(this.jobClass);
+  }
+
+  public boolean isEvolving() {
+    if (this.jobClass == null) return false;
+    if (!this.isNowReachable) return false;
+    if ((System.currentTimeMillis() - (this.cdGrowShrink + Constants.CD_GROW_SHRINK)) <= 0)
+      return false;
+    return Constants.JOB_CLASS_EVOLVING.equals(this.jobClass);
   }
 
   public void cleanNodes() {

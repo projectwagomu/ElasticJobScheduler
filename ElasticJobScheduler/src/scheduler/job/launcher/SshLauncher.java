@@ -22,6 +22,17 @@ import scheduler.worker.cluster.Node;
 public class SshLauncher implements Launcher {
   @Override
   public ProcessBuilder launch(Job job, List<Node> nodes, File file) {
+    final String elastic;
+    if (Configuration.CONFIG_SCHEDULER_STRATEGIES.get().toLowerCase().contains("evolving")
+        && job.getJobName().toLowerCase().contains("evolving")) {
+      elastic = "evolving";
+    } else if (Configuration.CONFIG_SCHEDULER_STRATEGIES.get().toLowerCase().contains("malleable")
+        && job.getJobName().toLowerCase().contains("malleable")) {
+      elastic = "malleable";
+    } else {
+      elastic = "rigid";
+    }
+
     String[] execString = {
       "ssh",
       "-t",
@@ -34,6 +45,9 @@ public class SshLauncher implements Launcher {
       "SCRIPT_DIR=" + job.scriptDir,
       "LAUNCHER=" + Configuration.CONFIG_SCHEDULER_INSIDE_JOB_LAUNCHER.get(),
       "WORKERS=" + Configuration.CONFIG_SCHEDULER_JOB_WORKERS.get(),
+      "ELASTIC=" + elastic,
+      "JOBNAME=" + job.getId(),
+      "PORT=" + (5701 + job.getId()),
       job.scriptPath.toString(),
     };
 

@@ -8,6 +8,5 @@
 
 common_dir="${SCRIPT_DIR}/"
 
-malleable="malleable"
 GLBN=511
 source ${common_dir}/common.sh "handist.glb.examples.pi.StartPi -n 1200000000000"
