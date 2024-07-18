@@ -9,6 +9,7 @@
 import os
 import random
 import stat
+import string
 import sys
 import importlib
 
@@ -49,6 +50,10 @@ config_variables = ['scheduler_algo',
                     'rigid_to_malleable_map'
                     ]
 
+def generate_random_string(length=6):
+    letters = string.ascii_letters + string.digits
+    return ''.join(random.choice(letters) for i in range(length))
+
 # Generate a 100% rigid job set
 def generate_rigid_job_set(num_jobs):
     job_set = random.choices(
@@ -83,7 +88,7 @@ def generate_mixed_job_set(base_set, percentage_malleable):
     return converted_jobs
 
 
-def write_to_sh_file(sorted_jobs, path, scheduler, percentage, seed):
+def write_to_sh_file(sorted_jobs, path, scheduler, percentage, seed, random_string):
     filename = path + ex_name + "/" + ex_name + "_" + scheduler + "_" + percentage + "_" + str(seed) + ".sh"
     print(filename)
     written_sh_files.append(filename)
@@ -103,6 +108,7 @@ def write_to_sh_file(sorted_jobs, path, scheduler, percentage, seed):
         file.write('export WORKERS=' + str(cores_per_node) + '\n')
         file.write('export SCHEDULER=' + scheduler + '\n')
         file.write('export EXPNAME=' + ex_name + '_' + scheduler + '_' + percentage + '_' + str(seed) + '\n')
+        file.write('export RAND=' + random_string + '\n')
         file.write('export EXPERIMENT="' + '\n')
         for index, (job, timestamp) in enumerate(sorted_jobs):
             if index < jobs_without_delay:
@@ -142,8 +148,21 @@ if __name__ == '__main__':
     config_module_name = "smallConfig"
     if len(sys.argv) > 1:
         config_module_name = sys.argv[1]
+    else:
+        print("Usage: python script.py <config_module> [slurm|docker-cluster]")
+        sys.exit(1)
+
     config = load_config(config_module_name)
     print("Config: ", config_module_name)
+
+    if len(sys.argv) > 2:
+        environment = sys.argv[2]
+        if environment not in ["slurm", "docker-cluster"]:
+            print("Second argument must be 'slurm' or 'docker-cluster'.")
+            sys.exit(1)
+    else:
+        print("Second argument could be 'slurm' or 'docker-cluster'.")
+        environment = "slurm"
 
     for var in config_variables:
         globals()[var] = config[var]
@@ -151,12 +170,14 @@ if __name__ == '__main__':
     args = sys.argv
     path = args[0]
     path = path.replace("generateExperiments.py", "")
-    path = path + "../slurm/"
+    path = path + f"../{environment}/"
     print("Path: ", path)
     print("Experiment: ", path + ex_name)
 
     if not os.path.exists(path + ex_name):
         os.makedirs(path + ex_name)
+
+    random_string = generate_random_string()
 
     for s in seeds:
         for algo in scheduler_algo:
@@ -164,12 +185,12 @@ if __name__ == '__main__':
 
             rigid_job_set = generate_rigid_job_set(num_jobs)
 
-            write_to_sh_file(rigid_job_set, path, algo, "0", s)
+            write_to_sh_file(rigid_job_set, path, algo, "0", s, random_string)
 
             for percentage in percentages_malleable:
                 random.seed(s)
                 job_set = generate_mixed_job_set(rigid_job_set, percentage)
-                write_to_sh_file(job_set, path, algo, f"{int(percentage * 100)}", s)
+                write_to_sh_file(job_set, path, algo, f"{int(percentage * 100)}", s, random_string)
 
     # Write start_experiment files
     pathWithName = os.path.join(path, ex_name)

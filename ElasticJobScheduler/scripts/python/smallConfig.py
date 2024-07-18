@@ -8,6 +8,7 @@
 
 # scheduler_algo = ["FCFS", "Backfilling", "EasyBackfilling", "MalleableStrategy"]
 scheduler_algo = ["FCFS", "MalleableStrategy"]
+malleable_strategies = ["MalleableStrategy"]
 num_jobs = 10
 nodes = 8
 cores_per_node = 48

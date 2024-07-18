@@ -7,6 +7,7 @@
 #  SPDX-License-Identifier: EPL-2.0
 
 scheduler_algo = ["FCFS", "Backfilling", "EasyBackfilling", "MalleableStrategy"]
+malleable_strategies = ["MalleableStrategy"]
 num_jobs = 25
 nodes = 32
 cores_per_node = 48

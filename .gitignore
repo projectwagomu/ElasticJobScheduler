@@ -1,10 +1,15 @@
 # Created by https://www.gitignore.io/api/java,gradle,eclipse,intellij
 
-apgas/target/
-lifelineglb/target/
+apgas/
+lifelineglb/
 ElasticJobScheduler/scripts/slurm/experiment*
 ElasticJobScheduler/scripts/slurm/small_config*
-ElasticJobScheduler/scripts/slurm/paper_config*
+ElasticJobScheduler/scripts/slurm/DynRes24*
+ElasticJobScheduler/scripts/slurm/dockerConfig*
+ElasticJobScheduler/scripts/docker-cluster/experiment*
+ElasticJobScheduler/scripts/docker-cluster/small_config*
+ElasticJobScheduler/scripts/docker-cluster/DynRes24*
+ElasticJobScheduler/scripts/docker-cluster/dockerConfig*
 ElasticJobScheduler/out
 ElasticJobScheduler/scripts/python/__pycache__/
 

@@ -33,8 +33,6 @@ ANALYSES_PATH = ""
 INPUT_PATH = ""
 GLOBAL_MAP = {}
 ARRAY_MALLEABLE_TO_RIGID = []
-MALLEABLE_STRATEGIES = ["EvolvingEasyBackfilling"]
-#MALLEABLE_STRATEGIES = ["MalleableStrategy"]
 GENERATE_CSV_PER_EXP = True
 GENERATE_IMAGE_PER_EXP = True
 DRAW_WEB = False
@@ -64,8 +62,9 @@ color_mapping = {
 
 # Explicitly declare variables filled with dummy values
 scheduler_algo = ['']
+malleable_strategies = ['']
 # List of expected configuration variables
-config_variables = ['scheduler_algo']
+config_variables = ['scheduler_algo', 'malleable_strategies']
 scheduler_algo_reverse = ['']
 
 DRAW_RANGE = 0
@@ -106,7 +105,8 @@ def main():
 
     waiting_time = average_job_waiting_time()
 
-    average_job_turnaround_time_stacked(computation_time, waiting_time)
+    # Can currently only process exactly 0%, 20%, 40%...100% moldable jobs
+    # average_job_turnaround_time_stacked(computation_time, waiting_time)
 
     answer_time = apgas_answer_time()
 
@@ -410,7 +410,7 @@ def event_malleable():
         if malleable not in dic_expand:
             dic_expand[malleable] = []
 
-        if strategy in MALLEABLE_STRATEGIES:
+        if strategy in malleable_strategies:
             shrink, expand = 0, 0
             for job_id in data["jobs"]:
                 job = data["jobs"][job_id]
